@@ -453,9 +453,9 @@ function renderTrip() {
       <h2>🇯🇵 ${esc(trip.title)}</h2>
       <div class="meta">${fmtDate(trip.opts.start)} – ${fmtDate(endDate)}｜${PACE[trip.opts.pace].label}步調</div>
       <div class="stats">
-        <div class="stat"><b class="counter-num" data-target="${trip.opts.days}">${trip.opts.days}</b><small>天</small></div>
-        <div class="stat"><b class="counter-num" data-target="${spots}">${spots}</b><small>個景點</small></div>
-        <div class="stat"><b class="counter-cost" data-target="${total}">${yen(total)}</b><small>預估/人 ≈ ${twd(total)}</small></div>
+        <div class="stat"><b>${trip.opts.days}</b><small>天</small></div>
+        <div class="stat"><b>${spots}</b><small>個景點</small></div>
+        <div class="stat"><b>${yen(total)}</b><small>預估/人 ≈ ${twd(total)}</small></div>
       </div>
       <div class="trip-actions">
         <button class="btn" data-act="save">💾 儲存</button>
@@ -469,8 +469,7 @@ function renderTrip() {
       <p class="muted" style="font-size:12px">預估花費含市內交通、城市間交通、門票、餐飲，不含住宿與購物。</p></div>
     ${trip.days.map((d, di) => renderDay(d, di)).join('')}
   `;
-  triggerScrollReveal();
-  animateNumbers();
+}
 }
 
 function renderDay(d, di) {
@@ -994,20 +993,19 @@ function init3DCanvas() {
   animate();
 }
 
-// 2. 3D 卡片動態視差傾斜 (Kinetic Parallax Card Tilt)
+// 2. 3D 卡片動態視差傾斜 (Kinetic Parallax Card Tilt，僅在滑鼠懸停時觸發，不干擾觸控)
 function initKineticTilt() {
   const cards = $$('[data-tilt]');
   cards.forEach((card) => {
     let bounds = null;
     function onMove(e) {
+      if (e.pointerType === 'touch') return;
       if (!bounds) bounds = card.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const x = clientX - bounds.left;
-      const y = clientY - bounds.top;
+      const x = e.clientX - bounds.left;
+      const y = e.clientY - bounds.top;
       const dx = (x / bounds.width - 0.5) * 2;
       const dy = (y / bounds.height - 0.5) * 2;
-      card.style.transform = `perspective(1000px) rotateX(${-dy * 6}deg) rotateY(${dx * 6}deg) translateZ(6px)`;
+      card.style.transform = `perspective(1000px) rotateX(${-dy * 4}deg) rotateY(${dx * 4}deg) translateZ(4px)`;
     }
     function onLeave() {
       bounds = null;
@@ -1019,31 +1017,7 @@ function initKineticTilt() {
   });
 }
 
-// 3. 3D 滾動進場揭示 (Stagger 3D Scroll Reveal)
-let revealObserver = null;
-function initScrollReveal() {
-  if (!('IntersectionObserver' in window)) return;
-  revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('active');
-        revealObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-  triggerScrollReveal();
-}
-function triggerScrollReveal() {
-  $$('.glass-card, .item, .day, .bento-card').forEach((el, idx) => {
-    if (!el.classList.contains('reveal-3d')) {
-      el.classList.add('reveal-3d');
-      el.style.transitionDelay = `${(idx % 4) * 0.08}s`;
-      revealObserver?.observe(el);
-    }
-  });
-}
-
-// 4. 點擊水波紋 (Kinetic Tap Ripple)
+// 3. 點擊水波紋 (Kinetic Tap Ripple)
 function initTapRipple() {
   document.addEventListener('pointerdown', (e) => {
     const target = e.target.closest('.btn-magic, .preset-pill, .chip, .bento-card, .btn');
@@ -1060,20 +1034,6 @@ function initTapRipple() {
     target.appendChild(ripple);
     setTimeout(() => ripple.remove(), 600);
   }, { passive: true });
-}
-
-// 5. 數據滾動跳動動畫 (Spring Counter Animation)
-function animateNumbers() {
-  $$('.counter-num').forEach((el) => {
-    const target = +el.dataset.target || 0;
-    let cur = 0;
-    const step = Math.max(1, Math.round(target / 20));
-    const timer = setInterval(() => {
-      cur = Math.min(target, cur + step);
-      el.textContent = cur;
-      if (cur >= target) clearInterval(timer);
-    }, 25);
-  });
 }
 
 /* ====================== 啟動 ====================== */
@@ -1102,10 +1062,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => $('#tool-' + a.dataset.tool)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
   }));
 
-  // 啟動 3D 動態動效引擎
+  // 啟動 3D 動態動效
   init3DCanvas();
   initKineticTilt();
-  initScrollReveal();
   initTapRipple();
 
   go(currentTab());

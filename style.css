@@ -350,14 +350,8 @@ main {
   will-change: transform;
 }
 
-/* 3D 滾動進場揭示 (3D Stagger Entrance) */
+/* 3D 滾動進場揭示 (3D Stagger Entrance) - 安全常顯設計 */
 .reveal-3d {
-  opacity: 0;
-  transform: perspective(900px) translateY(32px) translateZ(-30px) rotateX(6deg);
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity;
-}
-.reveal-3d.active {
   opacity: 1;
   transform: none;
 }
@@ -390,9 +384,7 @@ main {
   font-size: 25px;
   font-weight: 800;
   line-height: 1.25;
-  background: linear-gradient(135deg, #0f172a 0%, #334155 50%, #4338ca 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--ink);
   margin-bottom: 6px;
 }
 .hero-sub {
