@@ -66,7 +66,7 @@ const TABS = ['plan', 'transport', 'food', 'map', 'deals', 'tools'];
 function currentTab() { const h = location.hash.slice(1); return TABS.includes(h) ? h : 'plan'; }
 function go(tab) {
   $$('.page').forEach((p) => p.classList.toggle('active', p.id === 'page-' + tab));
-  $$('.tabbar a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
+  $$('.tabbar-floating a, .tabbar a').forEach((a) => a.classList.toggle('on', a.dataset.tab === tab));
   window.scrollTo(0, 0);
   if (tab === 'map') initMap();
   if (tab === 'tools') initTools();
@@ -115,6 +115,32 @@ function initPlanForm() {
     const inp = $('#days');
     inp.value = Math.min(21, Math.max(1, (+inp.value || 1) + +b.dataset.step));
   }));
+
+  // Gemini 靈感預設膠囊
+  const PRESETS = {
+    'tokyo-cherry': { cities: ['tokyo'], days: 5, pace: 'normal', interests: ['culture', 'food', 'view'] },
+    'kansai-classic': { cities: ['osaka', 'kyoto', 'nara'], days: 6, pace: 'normal', interests: ['culture', 'food'] },
+    'sapporo-snow': { cities: ['sapporo'], days: 5, pace: 'normal', interests: ['nature', 'food', 'view'] },
+    'okinawa-drive': { cities: ['okinawa'], days: 4, pace: 'relax', interests: ['nature', 'view', 'fun'] },
+  };
+
+  $('.prompt-presets')?.addEventListener('click', (e) => {
+    const b = e.target.closest('.preset-pill'); if (!b) return;
+    const p = PRESETS[b.dataset.preset]; if (!p) return;
+    state.cities = [...p.cities];
+    state.pace = p.pace;
+    state.interests = new Set(p.interests);
+    $('#days').value = p.days;
+    renderCityChips();
+    renderInterestChips();
+    $$('#paceSeg button').forEach((x) => x.classList.toggle('on', x.dataset.v === p.pace));
+    const start = $('#startDate').value || ymd(new Date());
+    state.trip = generateTrip({ cities: [...state.cities], start, days: p.days, pace: state.pace, interests: [...state.interests], seed: Date.now() % 1e9 });
+    LS.set('currentTrip', state.trip);
+    renderTrip();
+    setTimeout(() => $('#itinerary').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    toast(`✨ 已為您套用「${b.textContent.trim()}」行程！`);
+  });
   $('#planForm').addEventListener('submit', (e) => {
     e.preventDefault();
     if (!state.cities.length) { $('#formHint').textContent = '請至少選擇一個城市 👆'; return; }
@@ -883,7 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#itinerary').addEventListener('click', onItineraryClick);
 
   // 快速入口：工具卡片直接捲動到指定區塊
-  $$('.quick-grid a[data-tool]').forEach((a) => a.addEventListener('click', (e) => {
+  $$('.quick-grid a[data-tool], .bento-card[data-tool]').forEach((a) => a.addEventListener('click', (e) => {
     e.preventDefault();
     if (location.hash !== '#tools') location.hash = 'tools'; else go('tools');
     setTimeout(() => $('#tool-' + a.dataset.tool)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);

@@ -1,7 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="110" fill="#e60033"/>
-  <circle cx="256" cy="210" r="96" fill="#fff"/>
-  <path d="M96 420 L210 270 L256 320 L300 260 L416 420 Z" fill="#fff" opacity=".95"/>
-  <path d="M210 270 L238 306 L256 290 L274 306 L300 260 L256 320 Z" fill="#e60033" opacity=".35"/>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+    <linearGradient id="star" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="35%" stop-color="#818cf8" />
+      <stop offset="70%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#fb7185" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="24" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bg)" />
+  <circle cx="256" cy="256" r="160" fill="#ffffff" opacity="0.12" filter="url(#glow)" />
+  <path d="M256 64 C256 170 170 256 64 256 C170 256 256 342 256 448 C256 342 342 256 448 256 C342 256 256 170 256 64 Z" fill="url(#star)" />
+  <circle cx="256" cy="256" r="44" fill="#ffffff" opacity="0.9" />
 </svg>
-
