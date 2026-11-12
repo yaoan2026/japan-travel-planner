@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#e60033" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="日本旅遊" />
+  <meta name="description" content="日本旅行規劃：一鍵生成行程、交通票券、美食、地圖與優惠資訊。" />
+  <title>旅日手帖｜日本旅行規劃</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">旅</span><div><b>旅日手帖</b><small>Japan Trip Planner</small></div></div>
+    <button class="icon-btn" id="btnTrips" aria-label="我的行程">📒</button>
+  </header>
+
+  <main id="app">
+    <!-- ========== 規劃 ========== -->
+    <section class="page active" id="page-plan">
+      <div class="hero">
+        <h1>一鍵規劃你的日本行程</h1>
+        <p>選城市、選日期，自動排好每天的景點、餐廳與交通 ✨</p>
+      </div>
+
+      <form class="card form" id="planForm">
+        <label class="field-label">想去哪裡？<small>（可多選，依點選順序安排）</small></label>
+        <div class="chips" id="cityChips"></div>
+
+        <div class="row">
+          <div class="field">
+            <label class="field-label" for="startDate">出發日期</label>
+            <input type="date" id="startDate" required />
+          </div>
+          <div class="field">
+            <label class="field-label" for="days">天數</label>
+            <div class="stepper">
+              <button type="button" data-step="-1">−</button>
+              <input type="number" id="days" min="1" max="21" value="5" />
+              <button type="button" data-step="1">＋</button>
+            </div>
+          </div>
+        </div>
+
+        <label class="field-label">旅行步調</label>
+        <div class="seg" id="paceSeg">
+          <button type="button" data-v="relax">🐢 輕鬆</button>
+          <button type="button" data-v="normal" class="on">🚶 標準</button>
+          <button type="button" data-v="packed">🏃 緊湊</button>
+        </div>
+
+        <label class="field-label">興趣偏好 <small>（可多選）</small></label>
+        <div class="chips" id="interestChips"></div>
+
+        <button type="submit" class="btn primary big">⚡ 一鍵生成行程</button>
+        <p class="hint" id="formHint"></p>
+      </form>
+
+      <div id="itinerary"></div>
+
+      <div class="card quick">
+        <h3>快速入口</h3>
+        <div class="quick-grid">
+          <a href="#transport">🚄<span>交通票券</span></a>
+          <a href="#food">🍣<span>必吃美食</span></a>
+          <a href="#map">🗺️<span>景點地圖</span></a>
+          <a href="#deals">🎁<span>優惠情報</span></a>
+          <a href="#tools" data-tool="fx">💱<span>匯率換算</span></a>
+          <a href="#tools" data-tool="weather">⛅<span>天氣預報</span></a>
+          <a href="#tools" data-tool="phrase">🗣️<span>實用日語</span></a>
+          <a href="#tools" data-tool="sos">🆘<span>緊急電話</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== 交通 ========== -->
+    <section class="page" id="page-transport">
+      <h2 class="page-title">🚄 交通攻略</h2>
+      <div class="chips scroll" id="transportCity"></div>
+      <div id="transportBody"></div>
+    </section>
+
+    <!-- ========== 美食 ========== -->
+    <section class="page" id="page-food">
+      <h2 class="page-title">🍣 必吃美食</h2>
+      <div class="chips scroll" id="foodCity"></div>
+      <div id="foodBody"></div>
+    </section>
+
+    <!-- ========== 地圖 ========== -->
+    <section class="page" id="page-map">
+      <div class="map-tools">
+        <select id="mapCity"></select>
+        <select id="mapMode"><option value="spots">景點 & 美食</option></select>
+        <button class="icon-btn" id="btnLocate" aria-label="我的位置">📍</button>
+      </div>
+      <div class="chips scroll small" id="mapFilter"></div>
+      <div id="map"></div>
+      <div class="map-fallback hidden" id="mapFallback">地圖載入失敗，請確認網路連線。</div>
+    </section>
+
+    <!-- ========== 優惠 ========== -->
+    <section class="page" id="page-deals">
+      <h2 class="page-title">🎁 優惠情報</h2>
+      <div class="chips scroll" id="dealCat"></div>
+      <div id="dealBody"></div>
+    </section>
+
+    <!-- ========== 工具 ========== -->
+    <section class="page" id="page-tools">
+      <h2 class="page-title">🧰 旅遊工具</h2>
+
+      <div class="card" id="tool-fx">
+        <h3>💱 匯率換算</h3>
+        <div class="fx">
+          <div class="fx-row"><span>🇯🇵 JPY</span><input type="number" id="fxJpy" inputmode="decimal" value="1000" /></div>
+          <div class="fx-row"><span>🇹🇼 TWD</span><input type="number" id="fxTwd" inputmode="decimal" /></div>
+          <div class="fx-rate">1 JPY = <input type="number" id="fxRate" step="0.0001" /> TWD <button class="btn tiny" id="fxRefresh">更新</button></div>
+          <small class="muted" id="fxInfo"></small>
+          <div class="fx-quick" id="fxQuick"></div>
+        </div>
+      </div>
+
+      <div class="card" id="tool-weather">
+        <h3>⛅ 天氣預報（7 天）</h3>
+        <select id="weatherCity"></select>
+        <div id="weatherBody" class="weather"></div>
+      </div>
+
+      <div class="card" id="tool-phrase">
+        <h3>🗣️ 實用日語 <small class="muted">點一下發音</small></h3>
+        <div id="phraseBody"></div>
+      </div>
+
+      <div class="card" id="tool-sos">
+        <h3>🆘 緊急電話</h3>
+        <div id="sosBody"></div>
+      </div>
+
+      <div class="card" id="tool-check">
+        <h3>🧳 行前清單 <small class="muted" id="checkCount"></small></h3>
+        <div id="checkBody"></div>
+      </div>
+
+      <p class="disclaimer">※ 本網站價格、時間等資訊僅供參考，實際請以各官方公告為準。</p>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <a href="#plan" data-tab="plan" class="on"><i>🧭</i><span>規劃</span></a>
+    <a href="#transport" data-tab="transport"><i>🚄</i><span>交通</span></a>
+    <a href="#food" data-tab="food"><i>🍜</i><span>美食</span></a>
+    <a href="#map" data-tab="map"><i>🗺️</i><span>地圖</span></a>
+    <a href="#deals" data-tab="deals"><i>🎁</i><span>優惠</span></a>
+    <a href="#tools" data-tab="tools"><i>🧰</i><span>工具</span></a>
+  </nav>
+
+  <!-- 我的行程抽屜 -->
+  <div class="sheet-mask hidden" id="sheetMask"></div>
+  <div class="sheet" id="tripSheet">
+    <div class="sheet-handle"></div>
+    <h3>📒 我儲存的行程</h3>
+    <div id="tripList"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="data.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
+

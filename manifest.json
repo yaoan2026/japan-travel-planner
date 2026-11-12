@@ -1,0 +1,15 @@
+{
+  "name": "旅日手帖｜日本旅行規劃",
+  "short_name": "旅日手帖",
+  "description": "一鍵生成日本行程，交通、美食、地圖、優惠一次搞定。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5f2",
+  "theme_color": "#e60033",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
+
