@@ -1,15 +1,15 @@
 /* ========================================================
-   旅日手帖 (Japan Travel Planner) - Gemini 3D Claymorphic Theme
-   Inspired by Google Gemini 3D Motion & Modern Glassmorphism
+   旅日手帖 (Japan Travel Planner) - 3D Claymorphic Theme
+   Modern Glassmorphism & Claymorphic UI
    ======================================================== */
 
 :root {
-  /* Gemini & Modern Color Palette */
+  /* Modern Color Palette */
   --primary-blue: #3b82f6;
   --primary-indigo: #6366f1;
   --primary-violet: #8b5cf6;
   --primary-rose: #f43f5e;
-  --gemini-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 35%, #c084fc 70%, #fb7185 100%);
+  --aurora-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 35%, #c084fc 70%, #fb7185 100%);
   --button-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #ec4899 100%);
   --dark-slate: #0f172a;
   
@@ -135,7 +135,7 @@ h1, h2, h3, h4 {
   align-items: center;
   gap: 12px;
 }
-.gemini-sparkle {
+.brand-sparkle {
   width: 38px;
   height: 38px;
   border-radius: 12px;
@@ -144,7 +144,7 @@ h1, h2, h3, h4 {
   place-items: center;
   box-shadow: 0 4px 14px -2px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
 }
-.gemini-sparkle svg {
+.brand-sparkle svg {
   width: 22px;
   height: 22px;
   filter: drop-shadow(0 2px 4px rgba(129, 140, 248, 0.4));
@@ -236,8 +236,8 @@ main {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---------- Gemini Hero ---------- */
-.gemini-hero {
+/* ---------- Hero Card ---------- */
+.hero-card {
   border-radius: var(--radius-card);
   padding: 26px 20px 22px;
   margin-bottom: 16px;
@@ -249,14 +249,14 @@ main {
   position: relative;
   overflow: hidden;
 }
-.gemini-hero::after {
+.hero-card::after {
   content: "";
   position: absolute;
   top: -50px;
   right: -50px;
   width: 140px;
   height: 140px;
-  background: var(--gemini-gradient);
+  background: var(--aurora-gradient);
   filter: blur(40px);
   opacity: 0.25;
   border-radius: 50%;
@@ -489,8 +489,8 @@ main {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* Big Gemini Magic Button */
-.btn-gemini-magic {
+/* Magic Action Button */
+.btn-magic {
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -507,11 +507,11 @@ main {
   box-shadow: 0 10px 25px -4px rgba(124, 58, 237, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.btn-gemini-magic:hover {
+.btn-magic:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 30px -4px rgba(124, 58, 237, 0.55);
 }
-.btn-gemini-magic:active {
+.btn-magic:active {
   transform: scale(0.98);
 }
 .btn-content {
@@ -643,7 +643,7 @@ main {
   right: -30px;
   width: 120px;
   height: 120px;
-  background: var(--gemini-gradient);
+  background: var(--aurora-gradient);
   filter: blur(40px);
   opacity: 0.35;
   border-radius: 50%;

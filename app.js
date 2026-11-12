@@ -116,7 +116,7 @@ function initPlanForm() {
     inp.value = Math.min(21, Math.max(1, (+inp.value || 1) + +b.dataset.step));
   }));
 
-  // Gemini 靈感預設膠囊
+  // 靈感推薦行程預設膠囊
   const PRESETS = {
     'tokyo-cherry': { cities: ['tokyo'], days: 5, pace: 'normal', interests: ['culture', 'food', 'view'] },
     'kansai-classic': { cities: ['osaka', 'kyoto', 'nara'], days: 6, pace: 'normal', interests: ['culture', 'food'] },

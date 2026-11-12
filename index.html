@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -15,8 +16,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <!-- 背景流光漸層光暈 (Claymorphic / Gemini Ambient Mesh) -->
+  <!-- 背景流光漸層光暈 (Claymorphic Ambient Mesh) -->
   <div class="ambient-glow glow-1"></div>
   <div class="ambient-glow glow-2"></div>
   <div class="ambient-glow glow-3"></div>
@@ -24,9 +26,10 @@
   <!-- 頂部玻璃浮動導航 -->
   <header class="topbar">
     <div class="brand">
-      <div class="gemini-sparkle">
+      <div class="brand-sparkle">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C12 7.52 7.52 12 2 12C7.52 12 12 16.48 12 22C12 16.48 16.48 12 22 12C16.48 12 12 7.52 12 2Z" fill="url(#sparkle-grad)" />
+          <path d="M12 2C12 7.52 7.52 12 2 12C7.52 12 12 16.48 12 22C12 16.48 16.48 12 22 12C16.48 12 12 7.52 12 2Z"
+            fill="url(#sparkle-grad)" />
           <defs>
             <linearGradient id="sparkle-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
               <stop stop-color="#38BDF8" />
@@ -38,8 +41,8 @@
         </svg>
       </div>
       <div>
-        <div class="brand-title">旅日手帖 <span class="ai-badge">AI</span></div>
-        <small class="brand-sub">Smart Japan Planner</small>
+        <div class="brand-title">旅日手帖</div>
+        <small class="brand-sub">Japan Trip Planner</small>
       </div>
     </div>
     <button class="icon-btn" id="btnTrips" aria-label="我的行程">
@@ -50,12 +53,12 @@
   <main id="app">
     <!-- ========== 規劃 ========== -->
     <section class="page active" id="page-plan">
-      <!-- Gemini Prompt Hero -->
-      <div class="gemini-hero">
+      <!-- Prompt Hero -->
+      <div class="hero-card">
         <div class="hero-header">
           <span class="hero-chip">✨ 智慧行程引擎</span>
-          <h1 class="hero-title">Where should we start?</h1>
-          <p class="hero-sub">告訴我你想去的城市與天數，一鍵為你編排專屬行程</p>
+          <h1 class="hero-title">你想從哪裡開始旅程？</h1>
+          <p class="hero-sub">選定想去的城市與天數，一鍵為你編排專屬路線與美食推薦</p>
         </div>
 
         <!-- 靈感快捷 Capsule -->
@@ -105,11 +108,11 @@
           <div class="chips-container" id="interestChips"></div>
         </div>
 
-        <button type="submit" class="btn-gemini-magic">
+        <button type="submit" class="btn-magic">
           <span class="btn-shine"></span>
           <span class="btn-content">
             <svg class="star-icon" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="currentColor"/>
+              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="currentColor" />
             </svg>
             ⚡ 一鍵生成客製行程
           </span>
@@ -211,7 +214,9 @@
       <div class="map-controls glass-card">
         <div class="map-select-row">
           <select id="mapCity"></select>
-          <select id="mapMode"><option value="spots">景點 & 美食</option></select>
+          <select id="mapMode">
+            <option value="spots">景點 & 美食</option>
+          </select>
           <button class="icon-btn" id="btnLocate" aria-label="我的位置">📍</button>
         </div>
         <div class="chips-container scroll-x small" id="mapFilter"></div>
@@ -360,4 +365,5 @@
   <script src="data.js" defer></script>
   <script src="app.js" defer></script>
 </body>
+
 </html>
