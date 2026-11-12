@@ -449,13 +449,13 @@ function renderTrip() {
   const endDate = addDays(trip.opts.start, trip.opts.days - 1);
 
   el.innerHTML = `
-    <div class="trip-head">
+    <div class="trip-head" data-tilt>
       <h2>🇯🇵 ${esc(trip.title)}</h2>
       <div class="meta">${fmtDate(trip.opts.start)} – ${fmtDate(endDate)}｜${PACE[trip.opts.pace].label}步調</div>
       <div class="stats">
-        <div class="stat"><b>${trip.opts.days}</b><small>天</small></div>
-        <div class="stat"><b>${spots}</b><small>個景點</small></div>
-        <div class="stat"><b>${yen(total)}</b><small>預估/人 ≈ ${twd(total)}</small></div>
+        <div class="stat"><b class="counter-num" data-target="${trip.opts.days}">${trip.opts.days}</b><small>天</small></div>
+        <div class="stat"><b class="counter-num" data-target="${spots}">${spots}</b><small>個景點</small></div>
+        <div class="stat"><b class="counter-cost" data-target="${total}">${yen(total)}</b><small>預估/人 ≈ ${twd(total)}</small></div>
       </div>
       <div class="trip-actions">
         <button class="btn" data-act="save">💾 儲存</button>
@@ -469,12 +469,14 @@ function renderTrip() {
       <p class="muted" style="font-size:12px">預估花費含市內交通、城市間交通、門票、餐飲，不含住宿與購物。</p></div>
     ${trip.days.map((d, di) => renderDay(d, di)).join('')}
   `;
+  triggerScrollReveal();
+  animateNumbers();
 }
 
 function renderDay(d, di) {
   const city = CITIES[d.city];
   return `
-  <div class="day" data-day="${di}">
+  <div class="day reveal-3d" data-day="${di}" data-tilt>
     <div class="day-head" data-act="toggle">
       <span class="day-no">Day ${di + 1}</span>
       <div class="day-title"><b>${city.emoji} ${esc(city.name.replace(/（.*）/, ''))}｜${esc(d.summary)}</b><small>${fmtDate(d.date)}</small></div>
@@ -889,6 +891,191 @@ function initTools() {
   });
 }
 
+/* ====================== 3D 動態動效引擎 (Kinetic 3D Motion) ====================== */
+// 1. 背景 3D 粒子星空穿梭隧道 (Interactive 3D Particle Field & Warp)
+function init3DCanvas() {
+  const canvas = $('#bg-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let width, height, dpr;
+  let particles = [];
+  const COUNT = 75;
+  const colors = ['#38bdf8', '#818cf8', '#c084fc', '#fb7185', '#fcd34d'];
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = canvas.width = window.innerWidth * dpr;
+    height = canvas.height = window.innerHeight * dpr;
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  for (let i = 0; i < COUNT; i++) {
+    particles.push({
+      x: (Math.random() - 0.5) * 2000,
+      y: (Math.random() - 0.5) * 2000,
+      z: Math.random() * 1500 + 100,
+      size: Math.random() * 2.8 + 1.2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      baseAlpha: Math.random() * 0.45 + 0.25,
+    });
+  }
+
+  let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+  let scrollSpeed = 0;
+  let lastScrollY = window.scrollY;
+
+  window.addEventListener('pointermove', (e) => {
+    targetX = (e.clientX / window.innerWidth - 0.5) * 0.8;
+    targetY = (e.clientY / window.innerHeight - 0.5) * 0.8;
+  }, { passive: true });
+
+  window.addEventListener('scroll', () => {
+    const diff = Math.abs(window.scrollY - lastScrollY);
+    scrollSpeed = Math.min(diff * 0.6, 25);
+    lastScrollY = window.scrollY;
+  }, { passive: true });
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    mouseX += (targetX - mouseX) * 0.05;
+    mouseY += (targetY - mouseY) * 0.05;
+    scrollSpeed *= 0.92;
+
+    const cx = width / 2;
+    const cy = height / 2;
+    const fov = 400;
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.z -= (1.2 + scrollSpeed);
+      if (p.z <= 20) {
+        p.z = 1500;
+        p.x = (Math.random() - 0.5) * 2000;
+        p.y = (Math.random() - 0.5) * 2000;
+      }
+
+      const scale = fov / (fov + p.z);
+      const px = (p.x + mouseX * 200) * scale + cx;
+      const py = (p.y + mouseY * 200) * scale + cy;
+
+      if (px < -50 || px > width + 50 || py < -50 || py > height + 50) continue;
+
+      const alpha = p.baseAlpha * Math.min(1, (1500 - p.z) / 400);
+      const rad = p.size * scale * dpr;
+
+      ctx.beginPath();
+      ctx.arc(px, py, rad, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.fill();
+
+      for (let j = i + 1; j < particles.length; j++) {
+        const p2 = particles[j];
+        if (Math.abs(p.z - p2.z) > 120) continue;
+        const scale2 = fov / (fov + p2.z);
+        const p2x = (p2.x + mouseX * 200) * scale2 + cx;
+        const p2y = (p2.y + mouseY * 200) * scale2 + cy;
+        const dist = Math.hypot(px - p2x, py - p2y);
+        if (dist < 80 * dpr) {
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(p2x, p2y);
+          ctx.strokeStyle = p.color;
+          ctx.globalAlpha = (1 - dist / (80 * dpr)) * 0.15;
+          ctx.lineWidth = 0.8 * dpr;
+          ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+// 2. 3D 卡片動態視差傾斜 (Kinetic Parallax Card Tilt)
+function initKineticTilt() {
+  const cards = $$('[data-tilt]');
+  cards.forEach((card) => {
+    let bounds = null;
+    function onMove(e) {
+      if (!bounds) bounds = card.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = clientX - bounds.left;
+      const y = clientY - bounds.top;
+      const dx = (x / bounds.width - 0.5) * 2;
+      const dy = (y / bounds.height - 0.5) * 2;
+      card.style.transform = `perspective(1000px) rotateX(${-dy * 6}deg) rotateY(${dx * 6}deg) translateZ(6px)`;
+    }
+    function onLeave() {
+      bounds = null;
+      card.style.transform = '';
+    }
+    card.addEventListener('pointerenter', () => { bounds = card.getBoundingClientRect(); });
+    card.addEventListener('pointermove', onMove, { passive: true });
+    card.addEventListener('pointerleave', onLeave);
+  });
+}
+
+// 3. 3D 滾動進場揭示 (Stagger 3D Scroll Reveal)
+let revealObserver = null;
+function initScrollReveal() {
+  if (!('IntersectionObserver' in window)) return;
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  triggerScrollReveal();
+}
+function triggerScrollReveal() {
+  $$('.glass-card, .item, .day, .bento-card').forEach((el, idx) => {
+    if (!el.classList.contains('reveal-3d')) {
+      el.classList.add('reveal-3d');
+      el.style.transitionDelay = `${(idx % 4) * 0.08}s`;
+      revealObserver?.observe(el);
+    }
+  });
+}
+
+// 4. 點擊水波紋 (Kinetic Tap Ripple)
+function initTapRipple() {
+  document.addEventListener('pointerdown', (e) => {
+    const target = e.target.closest('.btn-magic, .preset-pill, .chip, .bento-card, .btn');
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple-fx';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+    target.style.position = target.style.position || 'relative';
+    target.style.overflow = 'hidden';
+    target.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  }, { passive: true });
+}
+
+// 5. 數據滾動跳動動畫 (Spring Counter Animation)
+function animateNumbers() {
+  $$('.counter-num').forEach((el) => {
+    const target = +el.dataset.target || 0;
+    let cur = 0;
+    const step = Math.max(1, Math.round(target / 20));
+    const timer = setInterval(() => {
+      cur = Math.min(target, cur + step);
+      el.textContent = cur;
+      if (cur >= target) clearInterval(timer);
+    }, 25);
+  });
+}
+
 /* ====================== 啟動 ====================== */
 function bindChipPage(sel, key, render) {
   $(sel).addEventListener('click', (e) => {
@@ -914,6 +1101,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (location.hash !== '#tools') location.hash = 'tools'; else go('tools');
     setTimeout(() => $('#tool-' + a.dataset.tool)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
   }));
+
+  // 啟動 3D 動態動效引擎
+  init3DCanvas();
+  initKineticTilt();
+  initScrollReveal();
+  initTapRipple();
 
   go(currentTab());
 
