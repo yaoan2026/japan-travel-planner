@@ -18,9 +18,6 @@
 </head>
 
 <body>
-  <!-- 3D 粒子星空隧道互動畫布 (Kinetic 3D Particle Tunnel) -->
-  <canvas id="bg-canvas"></canvas>
-
   <!-- 背景流光漸層光暈 (Claymorphic Ambient Mesh) -->
   <div class="ambient-glow glow-1"></div>
   <div class="ambient-glow glow-2"></div>
@@ -57,14 +54,7 @@
     <!-- ========== 規劃 ========== -->
     <section class="page active" id="page-plan">
       <!-- Prompt Hero -->
-      <div class="hero-card" data-tilt>
-        <!-- 3D 旋轉環動態視覺 -->
-        <div class="hero-3d-ring" aria-hidden="true">
-          <div class="ring-orbit ring-o1"></div>
-          <div class="ring-orbit ring-o2"></div>
-          <div class="ring-orbit ring-o3"></div>
-          <div class="ring-center"></div>
-        </div>
+      <div class="hero-card">
         <div class="hero-header">
           <span class="hero-chip">✨ 智慧行程引擎</span>
           <h1 class="hero-title">你想從哪裡開始旅程？</h1>
@@ -80,7 +70,7 @@
         </div>
       </div>
 
-      <form class="glass-card form-card" id="planForm" data-tilt>
+      <form class="glass-card form-card" id="planForm">
         <div class="field-header">
           <label class="field-label">目的地城市</label>
           <span class="field-hint">依點選順序安排跨城路線</span>
@@ -139,56 +129,56 @@
           <span>✨</span> 精選探索模組
         </div>
         <div class="bento-grid">
-          <a href="#transport" class="bento-card bento-blue" data-tilt>
+          <a href="#transport" class="bento-card bento-blue">
             <div class="bento-icon">🚄</div>
             <div class="bento-text">
               <b>交通攻略</b>
               <small>新幹線・票券・地圖</small>
             </div>
           </a>
-          <a href="#food" class="bento-card bento-amber" data-tilt>
+          <a href="#food" class="bento-card bento-amber">
             <div class="bento-icon">🍣</div>
             <div class="bento-text">
               <b>必吃美食</b>
               <small>名店排行・Tabelog</small>
             </div>
           </a>
-          <a href="#map" class="bento-card bento-emerald" data-tilt>
+          <a href="#map" class="bento-card bento-emerald">
             <div class="bento-icon">🗺️</div>
             <div class="bento-text">
               <b>動態地圖</b>
               <small>景點分布・路徑導航</small>
             </div>
           </a>
-          <a href="#deals" class="bento-card bento-rose" data-tilt>
+          <a href="#deals" class="bento-card bento-rose">
             <div class="bento-icon">🎁</div>
             <div class="bento-text">
               <b>優惠情報</b>
               <small>退稅新制・藥妝折價</small>
             </div>
           </a>
-          <a href="#tools" data-tool="fx" class="bento-card bento-violet" data-tilt>
+          <a href="#tools" data-tool="fx" class="bento-card bento-violet">
             <div class="bento-icon">💱</div>
             <div class="bento-text">
               <b>即時匯率</b>
               <small>日幣換算・銀行參考</small>
             </div>
           </a>
-          <a href="#tools" data-tool="weather" class="bento-card bento-sky" data-tilt>
+          <a href="#tools" data-tool="weather" class="bento-card bento-sky">
             <div class="bento-icon">⛅</div>
             <div class="bento-text">
               <b>一週天氣</b>
               <small>各城降雨・氣溫趨勢</small>
             </div>
           </a>
-          <a href="#tools" data-tool="phrase" class="bento-card bento-indigo" data-tilt>
+          <a href="#tools" data-tool="phrase" class="bento-card bento-indigo">
             <div class="bento-icon">🗣️</div>
             <div class="bento-text">
               <b>實用語音</b>
               <small>真人發音・旅行必備</small>
             </div>
           </a>
-          <a href="#tools" data-tool="sos" class="bento-card bento-pink" data-tilt>
+          <a href="#tools" data-tool="sos" class="bento-card bento-pink">
             <div class="bento-icon">🆘</div>
             <div class="bento-text">
               <b>緊急求助</b>

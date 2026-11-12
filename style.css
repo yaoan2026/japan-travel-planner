@@ -76,17 +76,6 @@ h1, h2, h3, h4 {
 .muted { color: var(--sub); }
 .hidden { display: none !important; }
 
-/* ---------- 3D Particle Canvas ---------- */
-#bg-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.9;
-}
-
 /* ---------- Ambient Mesh Glow (Claymorphic Background) ---------- */
 .ambient-glow {
   position: fixed;
@@ -272,102 +261,6 @@ main {
   opacity: 0.25;
   border-radius: 50%;
   pointer-events: none;
-}
-
-/* 3D 旋轉環動態視覺 (Kinetic Gyro 3D Rings) */
-.hero-3d-ring {
-  position: absolute;
-  top: -15px;
-  right: -15px;
-  width: 150px;
-  height: 150px;
-  perspective: 600px;
-  transform-style: preserve-3d;
-  pointer-events: none;
-  opacity: 0.75;
-  transition: opacity 0.3s ease;
-}
-.hero-card:hover .hero-3d-ring {
-  opacity: 1;
-}
-.ring-orbit {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-.ring-o1 {
-  border: 2px dashed rgba(56, 189, 248, 0.65);
-  animation: gyroSpin1 14s linear infinite;
-}
-.ring-o2 {
-  inset: 20px;
-  border: 2.5px solid transparent;
-  border-top-color: rgba(192, 132, 252, 0.75);
-  border-bottom-color: rgba(129, 140, 248, 0.75);
-  animation: gyroSpin2 9s linear infinite reverse;
-}
-.ring-o3 {
-  inset: 40px;
-  border: 2px dotted rgba(251, 113, 133, 0.75);
-  animation: gyroSpin3 18s linear infinite;
-}
-.ring-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 24px;
-  height: 24px;
-  margin: -12px 0 0 -12px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #818cf8 0%, #c084fc 60%, transparent 100%);
-  filter: blur(3px);
-  animation: pulseGlow 3s ease-in-out infinite alternate;
-}
-@keyframes gyroSpin1 {
-  0% { transform: rotateX(65deg) rotateY(25deg) rotateZ(0deg); }
-  100% { transform: rotateX(65deg) rotateY(25deg) rotateZ(360deg); }
-}
-@keyframes gyroSpin2 {
-  0% { transform: rotateX(40deg) rotateY(-40deg) rotateZ(0deg); }
-  100% { transform: rotateX(40deg) rotateY(-40deg) rotateZ(360deg); }
-}
-@keyframes gyroSpin3 {
-  0% { transform: rotateX(-30deg) rotateY(65deg) rotateZ(0deg); }
-  100% { transform: rotateX(-30deg) rotateY(65deg) rotateZ(360deg); }
-}
-@keyframes pulseGlow {
-  0% { transform: scale(0.85); opacity: 0.55; }
-  100% { transform: scale(1.35); opacity: 0.95; }
-}
-
-/* 3D 視差傾斜與景深 (Kinetic 3D Parallax Tilt) */
-[data-tilt] {
-  transform-style: preserve-3d;
-  perspective: 1000px;
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
-}
-
-/* 3D 滾動進場揭示 (3D Stagger Entrance) - 安全常顯設計 */
-.reveal-3d {
-  opacity: 1;
-  transform: none;
-}
-
-/* 點擊水波紋 (Kinetic Tap Ripple) */
-.ripple-fx {
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 70%);
-  transform: scale(0);
-  animation: ripplePop 0.55s ease-out;
-  pointer-events: none;
-  z-index: 10;
-}
-@keyframes ripplePop {
-  to { transform: scale(3.5); opacity: 0; }
 }
 .hero-chip {
   display: inline-block;
