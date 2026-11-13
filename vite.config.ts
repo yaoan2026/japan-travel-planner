@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    base: '/japan-trip-planner/',
+    base: '/japan-travel-planner/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
