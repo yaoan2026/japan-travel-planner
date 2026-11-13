@@ -1322,16 +1322,38 @@ ul.clean li {
 .trip-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 14px 0;
   border-bottom: 1px solid var(--line);
 }
 .trip-row .info {
   flex: 1;
+  min-width: 0;
   cursor: pointer;
 }
 .trip-row b {
   font-size: 15px;
+}
+.trip-row-acts {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.sheet-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.sheet-footer .btn {
+  flex: 1;
+  justify-content: center;
+}
+.preset-pill.pinned {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #92400e;
 }
 
 /* Toast */

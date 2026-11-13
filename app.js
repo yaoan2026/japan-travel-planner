@@ -73,7 +73,45 @@ function go(tab) {
 }
 window.addEventListener('hashchange', () => go(currentTab()));
 
-/* ====================== 規劃表單 ====================== */
+/* ====================== 規劃表單與偏好記憶 ====================== */
+const DEFAULT_PRESETS = [
+  { key: 'tokyo-cherry', label: '🌸 東京 5 天潮流賞櫻', cities: ['tokyo'], days: 5, pace: 'normal', interests: ['culture', 'food', 'view'] },
+  { key: 'kansai-classic', label: '⛩️ 關西 6 天古都漫遊', cities: ['osaka', 'kyoto', 'nara'], days: 6, pace: 'normal', interests: ['culture', 'food'] },
+  { key: 'sapporo-snow', label: '❄️ 北海道 5 天破冰美食', cities: ['sapporo'], days: 5, pace: 'normal', interests: ['nature', 'food', 'view'] },
+  { key: 'okinawa-drive', label: '🏝️ 沖繩 4 天海島自駕', cities: ['okinawa'], days: 4, pace: 'relax', interests: ['nature', 'view', 'fun'] },
+];
+
+function savePrefs() {
+  LS.set('prefs', {
+    cities: [...state.cities],
+    days: Math.min(21, Math.max(1, +$('#days')?.value || 5)),
+    pace: state.pace,
+    interests: [...state.interests],
+  });
+}
+
+function applyFormFromPrefs(p) {
+  if (!p) return;
+  if (Array.isArray(p.cities)) state.cities = p.cities.filter((c) => CITIES[c]);
+  if (p.pace && PACE[p.pace]) state.pace = p.pace;
+  if (Array.isArray(p.interests)) state.interests = new Set(p.interests.filter((t) => TAGS[t]));
+  if (p.days) $('#days').value = Math.min(21, Math.max(1, +p.days));
+  renderCityChips();
+  renderInterestChips();
+  $$('#paceSeg button').forEach((x) => x.classList.toggle('on', x.dataset.v === state.pace));
+}
+
+function renderPresets() {
+  const wrap = $('.prompt-presets');
+  if (!wrap) return;
+  const pinned = LS.get('trips', []).filter((t) => t.pinned);
+  const pinnedHtml = pinned.map((t) =>
+    `<button type="button" class="preset-pill pinned" data-pinned="${esc(t.id)}">⭐ ${esc(t.title)}</button>`).join('');
+  const defHtml = DEFAULT_PRESETS.map((p) =>
+    `<button type="button" class="preset-pill" data-preset="${p.key}">${p.label}</button>`).join('');
+  wrap.innerHTML = pinnedHtml + defHtml;
+}
+
 function renderCityChips() {
   $('#cityChips').innerHTML = Object.entries(CITIES).map(([id, c]) => {
     const idx = state.cities.indexOf(id);
@@ -87,53 +125,58 @@ function renderInterestChips() {
 function initPlanForm() {
   const start = new Date(); start.setDate(start.getDate() + 14);
   $('#startDate').value = ymd(start);
+  applyFormFromPrefs(LS.get('prefs', null));
   renderCityChips();
   renderInterestChips();
+  renderPresets();
 
   $('#cityChips').addEventListener('click', (e) => {
     const b = e.target.closest('.chip'); if (!b) return;
     const id = b.dataset.id, i = state.cities.indexOf(id);
     if (i >= 0) state.cities.splice(i, 1); else state.cities.push(id);
     renderCityChips();
-    // 依城市建議天數自動帶入
     const rec = state.cities.reduce((s, c) => s + CITIES[c].recDays, 0);
     if (rec) $('#days').value = Math.min(21, Math.max(state.cities.length, Math.round(rec)));
     $('#formHint').textContent = '';
+    savePrefs();
   });
   $('#interestChips').addEventListener('click', (e) => {
     const b = e.target.closest('.chip'); if (!b) return;
     const id = b.dataset.id;
     state.interests.has(id) ? state.interests.delete(id) : state.interests.add(id);
     renderInterestChips();
+    savePrefs();
   });
   $('#paceSeg').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     state.pace = b.dataset.v;
     $$('#paceSeg button').forEach((x) => x.classList.toggle('on', x === b));
+    savePrefs();
   });
   $$('.stepper button').forEach((b) => b.addEventListener('click', () => {
     const inp = $('#days');
     inp.value = Math.min(21, Math.max(1, (+inp.value || 1) + +b.dataset.step));
+    savePrefs();
   }));
-
-  // 靈感推薦行程預設膠囊
-  const PRESETS = {
-    'tokyo-cherry': { cities: ['tokyo'], days: 5, pace: 'normal', interests: ['culture', 'food', 'view'] },
-    'kansai-classic': { cities: ['osaka', 'kyoto', 'nara'], days: 6, pace: 'normal', interests: ['culture', 'food'] },
-    'sapporo-snow': { cities: ['sapporo'], days: 5, pace: 'normal', interests: ['nature', 'food', 'view'] },
-    'okinawa-drive': { cities: ['okinawa'], days: 4, pace: 'relax', interests: ['nature', 'view', 'fun'] },
-  };
+  $('#days').addEventListener('change', savePrefs);
 
   $('.prompt-presets')?.addEventListener('click', (e) => {
     const b = e.target.closest('.preset-pill'); if (!b) return;
-    const p = PRESETS[b.dataset.preset]; if (!p) return;
-    state.cities = [...p.cities];
-    state.pace = p.pace;
-    state.interests = new Set(p.interests);
-    $('#days').value = p.days;
-    renderCityChips();
-    renderInterestChips();
-    $$('#paceSeg button').forEach((x) => x.classList.toggle('on', x.dataset.v === p.pace));
+    if (b.dataset.pinned) {
+      const saved = LS.get('trips', []).find((t) => t.id === b.dataset.pinned);
+      if (!saved) { renderPresets(); return; }
+      state.trip = saved;
+      LS.set('currentTrip', saved);
+      applyFormFromPrefs(saved.opts);
+      savePrefs();
+      renderTrip();
+      setTimeout(() => $('#itinerary').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+      toast(`⭐ 已載入偏好行程「${saved.title}」`);
+      return;
+    }
+    const p = DEFAULT_PRESETS.find((x) => x.key === b.dataset.preset); if (!p) return;
+    applyFormFromPrefs(p);
+    savePrefs();
     const start = $('#startDate').value || ymd(new Date());
     state.trip = generateTrip({ cities: [...state.cities], start, days: p.days, pace: state.pace, interests: [...state.interests], seed: Date.now() % 1e9 });
     LS.set('currentTrip', state.trip);
@@ -149,6 +192,7 @@ function initPlanForm() {
     if (days < state.cities.length) {
       $('#formHint').textContent = `天數少於城市數，只會安排前 ${days} 個城市。`;
     } else $('#formHint').textContent = '';
+    savePrefs();
     const opts = { cities: [...state.cities], start, days, pace: state.pace, interests: [...state.interests], seed: Date.now() % 1e9 };
     state.trip = generateTrip(opts);
     LS.set('currentTrip', state.trip);
@@ -459,6 +503,8 @@ function renderTrip() {
       </div>
       <div class="trip-actions">
         <button class="btn" data-act="save">💾 儲存</button>
+        <button class="btn" data-act="pin">${trip.pinned ? '⭐ 已釘選' : '☆ 釘選偏好'}</button>
+        <button class="btn" data-act="copylink">🔗 專屬連結</button>
         <button class="btn" data-act="regen">🔄 換一組</button>
         <button class="btn" data-act="share">📤 分享</button>
         <button class="btn" data-act="mapall">🗺️ 地圖</button>
@@ -518,6 +564,67 @@ function tripText(trip) {
   return lines.join('\n');
 }
 
+function toB64Url(bytes) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function fromB64Url(s) {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+async function encodeTripUrl(trip) {
+  const payload = JSON.stringify({
+    id: trip.id, title: trip.title, opts: trip.opts, days: trip.days,
+    cost: trip.cost, railCost: trip.railCost, tips: trip.tips,
+  });
+  const raw = new TextEncoder().encode(payload);
+  let code = 'j:' + toB64Url(raw);
+  if (typeof CompressionStream !== 'undefined') {
+    try {
+      const cs = new CompressionStream('gzip');
+      const w = cs.writable.getWriter();
+      w.write(raw); w.close();
+      const buf = await new Response(cs.readable).arrayBuffer();
+      code = 'z:' + toB64Url(new Uint8Array(buf));
+    } catch { /* 改用未壓縮格式 */ }
+  }
+  return `${location.origin}${location.pathname}?trip=${encodeURIComponent(code)}`;
+}
+async function decodeTripParam(code) {
+  if (!code) return null;
+  let bytes;
+  if (code.startsWith('z:') && typeof DecompressionStream !== 'undefined') {
+    const ds = new DecompressionStream('gzip');
+    const w = ds.writable.getWriter();
+    w.write(fromB64Url(code.slice(2))); w.close();
+    bytes = new Uint8Array(await new Response(ds.readable).arrayBuffer());
+  } else if (code.startsWith('j:')) {
+    bytes = fromB64Url(code.slice(2));
+  } else return null;
+  const obj = JSON.parse(new TextDecoder().decode(bytes));
+  if (!obj || !Array.isArray(obj.days) || !obj.opts) return null;
+  return obj;
+}
+async function copyTripLink(trip) {
+  try {
+    const url = await encodeTripUrl(trip);
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      toast('🔗 專屬同步連結已複製！傳到 LINE 或其他手機即可打開');
+    } else if (navigator.share) {
+      await navigator.share({ title: trip.title, url });
+    } else {
+      prompt('請複製下方專屬行程連結：', url);
+    }
+  } catch {
+    toast('無法產生連結');
+  }
+}
+
 function saveTrip(trip) {
   const list = LS.get('trips', []);
   const i = list.findIndex((t) => t.id === trip.id);
@@ -536,6 +643,16 @@ function onItineraryClick(e) {
   switch (act) {
     case 'toggle': dayEl.classList.toggle('collapsed'); return;
     case 'save': saveTrip(trip); toast('💾 已儲存到「我的行程」'); return;
+    case 'pin': {
+      trip.pinned = !trip.pinned;
+      saveTrip(trip);
+      LS.set('currentTrip', trip);
+      renderPresets();
+      renderTrip();
+      toast(trip.pinned ? '⭐ 已釘選到首頁偏好膠囊！' : '已取消釘選');
+      return;
+    }
+    case 'copylink': copyTripLink(trip); return;
     case 'regen': {
       state.trip = generateTrip({ ...trip.opts, seed: (trip.opts.seed * 7 + 13) % 1e9 });
       break;
@@ -580,9 +697,13 @@ function openSheet() {
   const list = LS.get('trips', []);
   $('#tripList').innerHTML = list.length ? list.map((t) => `
     <div class="trip-row" data-id="${t.id}">
-      <div class="info" data-act="load"><b>${esc(t.title)}</b><br><small>${fmtDate(t.opts.start)} 出發｜${t.opts.days} 天</small></div>
-      <button class="btn tiny" data-act="load">開啟</button>
-      <button class="btn tiny" data-act="remove">刪除</button>
+      <div class="info" data-act="load"><b>${t.pinned ? '⭐ ' : ''}${esc(t.title)}</b><br><small>${fmtDate(t.opts.start)} 出發｜${t.opts.days} 天</small></div>
+      <div class="trip-row-acts">
+        <button class="btn tiny" data-act="pin" title="釘選到首頁">${t.pinned ? '⭐' : '☆'}</button>
+        <button class="btn tiny" data-act="link" title="複製同步連結">🔗</button>
+        <button class="btn tiny" data-act="load">開啟</button>
+        <button class="btn tiny" data-act="remove">刪除</button>
+      </div>
     </div>`).join('') : '<p class="muted">還沒有儲存的行程，先到「規劃」一鍵生成吧！</p>';
   $('#sheetMask').classList.remove('hidden');
   $('#tripSheet').classList.add('open');
@@ -595,18 +716,65 @@ function initSheet() {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const id = b.closest('.trip-row').dataset.id;
     let list = LS.get('trips', []);
-    if (b.dataset.act === 'load') {
-      state.trip = list.find((t) => t.id === id);
+    const target = list.find((t) => t.id === id);
+    if (b.dataset.act === 'load' && target) {
+      state.trip = target;
       LS.set('currentTrip', state.trip);
+      applyFormFromPrefs(target.opts);
+      savePrefs();
       closeSheet();
       location.hash = 'plan';
       renderTrip();
       setTimeout(() => $('#itinerary').scrollIntoView({ behavior: 'smooth' }), 80);
+    } else if (b.dataset.act === 'pin' && target) {
+      target.pinned = !target.pinned;
+      LS.set('trips', list);
+      if (state.trip?.id === id) { state.trip.pinned = target.pinned; LS.set('currentTrip', state.trip); renderTrip(); }
+      renderPresets();
+      openSheet();
+      toast(target.pinned ? '⭐ 已釘選到首頁偏好膠囊！' : '已取消釘選');
+    } else if (b.dataset.act === 'link' && target) {
+      copyTripLink(target);
     } else if (b.dataset.act === 'remove') {
       list = list.filter((t) => t.id !== id);
       LS.set('trips', list);
+      renderPresets();
       openSheet();
     }
+  });
+
+  $('#btnExportTrips')?.addEventListener('click', () => {
+    const list = LS.get('trips', []);
+    if (!list.length) return toast('目前沒有可匯出的行程');
+    const blob = new Blob([JSON.stringify({ version: 1, trips: list, prefs: LS.get('prefs', null) }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `japan-trips-${ymd(new Date())}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('📤 已下載備份檔');
+  });
+
+  $('#btnImportTrips')?.addEventListener('click', () => $('#importFile')?.click());
+  $('#importFile')?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const incoming = Array.isArray(data) ? data : (Array.isArray(data?.trips) ? data.trips : []);
+      if (!incoming.length) throw new Error();
+      const cur = LS.get('trips', []);
+      const ids = new Set(cur.map((t) => t.id));
+      let added = 0;
+      incoming.forEach((t) => { if (t?.id && t?.days && !ids.has(t.id)) { cur.unshift(t); ids.add(t.id); added++; } });
+      LS.set('trips', cur.slice(0, 20));
+      renderPresets();
+      openSheet();
+      toast(`📥 已匯入 ${added} 筆行程！`);
+    } catch {
+      toast('備份檔格式不正確');
+    }
+    e.target.value = '';
   });
 }
 
@@ -896,7 +1064,31 @@ function bindChipPage(sel, key, render) {
     state[key] = b.dataset.id; render();
   });
 }
-document.addEventListener('DOMContentLoaded', () => {
+async function importTripFromUrl() {
+  const code = new URLSearchParams(location.search).get('trip');
+  if (!code) return;
+  try {
+    const imported = await decodeTripParam(code);
+    if (!imported || !Array.isArray(imported.days) || !imported.days.length) return;
+    state.trip = imported;
+    LS.set('currentTrip', imported);
+    saveTrip(imported);
+    if (imported.opts) {
+      applyFormFromPrefs(imported.opts);
+      savePrefs();
+    }
+    renderPresets();
+    renderTrip();
+    history.replaceState({}, '', location.pathname + location.hash);
+    if (currentTab() !== 'plan') location.hash = 'plan';
+    setTimeout(() => $('#itinerary')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    toast('📥 已從專屬連結載入行程！');
+  } catch {
+    toast('專屬連結格式無效或已損毀');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   initPlanForm();
   initSheet();
   renderTrip();
@@ -916,6 +1108,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
 
   go(currentTab());
+  await importTripFromUrl();
 
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
