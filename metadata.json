@@ -1,0 +1,6 @@
+{
+  "name": "旅日手帖｜日本旅行規劃",
+  "description": "極簡智慧日本旅行規劃平台：一鍵編排多城市行程、交通票券攻略、在地美食指南、互動路線地圖與即時隨身旅行工具。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
