@@ -26,16 +26,16 @@
   <!-- 頂部玻璃浮動導航 -->
   <header class="topbar">
     <div class="brand">
-      <div class="brand-sparkle">
+      <div class="brand-logo">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C12 7.52 7.52 12 2 12C7.52 12 12 16.48 12 22C12 16.48 16.48 12 22 12C16.48 12 12 7.52 12 2Z"
-            fill="url(#sparkle-grad)" />
+          <circle cx="16.5" cy="7.5" r="2.5" fill="#FB7185" />
+          <path d="M3 19L9.2 8.5C9.7 7.6 10.6 7 12 7C13.4 7 14.3 7.6 14.8 8.5L21 19H3Z" fill="url(#fuji-grad)" />
+          <path d="M8.1 12.2L9.2 8.5C9.7 7.6 10.6 7 12 7C13.4 7 14.3 7.6 14.8 8.5L15.9 12.2L13.8 11.2L12 12.6L10.2 11.2L8.1 12.2Z" fill="#FFFFFF" opacity="0.9" />
           <defs>
-            <linearGradient id="sparkle-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <linearGradient id="fuji-grad" x1="3" y1="7" x2="21" y2="19" gradientUnits="userSpaceOnUse">
               <stop stop-color="#38BDF8" />
-              <stop offset="0.45" stop-color="#818CF8" />
-              <stop offset="0.75" stop-color="#C084FC" />
-              <stop offset="1" stop-color="#FB7185" />
+              <stop offset="0.5" stop-color="#6366F1" />
+              <stop offset="1" stop-color="#A855F7" />
             </linearGradient>
           </defs>
         </svg>
@@ -56,7 +56,7 @@
       <!-- Prompt Hero -->
       <div class="hero-card">
         <div class="hero-header">
-          <span class="hero-chip">✨ 智慧行程引擎</span>
+          <span class="hero-chip">🗾 智慧行程引擎</span>
           <h1 class="hero-title">你想從哪裡開始旅程？</h1>
           <p class="hero-sub">選定想去的城市與天數，一鍵為你編排專屬路線與美食推薦</p>
         </div>
@@ -111,10 +111,10 @@
         <button type="submit" class="btn-magic">
           <span class="btn-shine"></span>
           <span class="btn-content">
-            <svg class="star-icon" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="currentColor" />
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none"/>
             </svg>
-            ⚡ 一鍵生成客製行程
+            一鍵生成客製行程
           </span>
         </button>
         <p class="hint" id="formHint"></p>
@@ -126,7 +126,7 @@
       <!-- Bento Grid 快速入口 -->
       <div class="bento-section">
         <div class="section-title">
-          <span>✨</span> 精選探索模組
+          <span>🧭</span> 精選探索模組
         </div>
         <div class="bento-grid">
           <a href="#transport" class="bento-card bento-blue">

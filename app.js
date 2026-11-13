@@ -139,7 +139,7 @@ function initPlanForm() {
     LS.set('currentTrip', state.trip);
     renderTrip();
     setTimeout(() => $('#itinerary').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-    toast(`✨ 已為您套用「${b.textContent.trim()}」行程！`);
+    toast(`🗾 已為您套用「${b.textContent.trim()}」行程！`);
   });
   $('#planForm').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -154,7 +154,7 @@ function initPlanForm() {
     LS.set('currentTrip', state.trip);
     renderTrip();
     setTimeout(() => $('#itinerary').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-    toast('✨ 行程已生成！');
+    toast('🎉 行程已生成！');
   });
 }
 
