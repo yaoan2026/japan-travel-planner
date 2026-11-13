@@ -33,6 +33,29 @@ function weatherBadge(c: number): [string, string] {
   return ['⛈️', '雷雨'];
 }
 
+function wwoToWmo(code: number): number {
+  if (code === 113) return 0;
+  if (code === 116) return 1;
+  if (code === 119 || code === 122) return 3;
+  if ([143, 248, 260].includes(code)) return 45;
+  if ([200, 386, 389, 392, 395].includes(code)) return 95;
+  if ([179, 227, 230, 323, 326, 329, 332, 335, 338, 368, 371].includes(code)) return 71;
+  if ([176, 263, 266, 281, 293, 296, 353].includes(code)) return 51;
+  return 61;
+}
+
+async function fetchJsonWithTimeout(url: string, ms = 6000) {
+  const ctrl = new AbortController();
+  const timer = window.setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 export const ToolsPage: React.FC<ToolsPageProps> = ({
   rate,
   onChangeRate,
@@ -47,8 +70,11 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
   const [fxLoading, setFxLoading] = useState(false);
 
   // Weather state
-  const [weatherCity, setWeatherCity] = useState<CityId>(defaultCity);
+  const [weatherCity, setWeatherCity] = useState<CityId>(() =>
+    defaultCity in CITIES ? defaultCity : 'tokyo'
+  );
   const [weatherDays, setWeatherDays] = useState<WeatherDay[]>([]);
+  const [weatherSource, setWeatherSource] = useState<string>('Open-Meteo（日本時間）');
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState(false);
 
@@ -101,24 +127,65 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
   }, []);
 
   const loadWeather = async (cid: CityId) => {
-    const c = CITIES[cid];
+    const c = CITIES[cid] || CITIES.tokyo;
+    const cacheKey = `weather_${cid}`;
+    const cached = LS.get<{ ts: number; source: string; days: WeatherDay[] } | null>(cacheKey, null);
+    if (cached?.days?.length && Date.now() - cached.ts < 30 * 60 * 1000) {
+      setWeatherDays(cached.days);
+      setWeatherSource(cached.source);
+      setWeatherError(false);
+      setWeatherLoading(false);
+      return;
+    }
+
     setWeatherLoading(true);
     setWeatherError(false);
     try {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lng}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo`;
-      const res = await fetch(url);
-      const j = await res.json();
-      const d = j.daily;
-      const days: WeatherDay[] = d.time.map((t: string, i: number) => ({
+      const j = await fetchJsonWithTimeout(url, 6000);
+      const d = j?.daily;
+      if (!Array.isArray(d?.time) || !d.time.length) throw new Error('Invalid Open-Meteo data');
+      const nextDays: WeatherDay[] = d.time.map((t: string, i: number) => ({
         date: t,
         code: d.weathercode[i],
         max: d.temperature_2m_max[i],
         min: d.temperature_2m_min[i],
         pop: d.precipitation_probability_max[i] ?? null,
       }));
-      setWeatherDays(days);
+      setWeatherDays(nextDays);
+      setWeatherSource('Open-Meteo（日本時間）');
+      LS.set(cacheKey, { ts: Date.now(), source: 'Open-Meteo（日本時間）', days: nextDays });
     } catch {
-      setWeatherError(true);
+      try {
+        const wttrUrl = `https://wttr.in/${c.lat},${c.lng}?format=j1`;
+        const w = await fetchJsonWithTimeout(wttrUrl, 6000);
+        if (!Array.isArray(w?.weather) || !w.weather.length) throw new Error('Invalid wttr data');
+        const nextDays: WeatherDay[] = w.weather.map((item: {
+          date: string;
+          maxtempC: string;
+          mintempC: string;
+          hourly?: Array<{ weatherCode?: string; chanceofrain?: string }>;
+        }) => {
+          const mid = item.hourly?.[4] || item.hourly?.[0] || {};
+          return {
+            date: item.date,
+            code: wwoToWmo(Number(mid.weatherCode) || 116),
+            max: Number(item.maxtempC) || 0,
+            min: Number(item.mintempC) || 0,
+            pop: mid.chanceofrain != null ? Number(mid.chanceofrain) : null,
+          };
+        });
+        setWeatherDays(nextDays);
+        setWeatherSource('wttr.in（即時備援預報）');
+        LS.set(cacheKey, { ts: Date.now(), source: 'wttr.in（即時備援預報）', days: nextDays });
+      } catch {
+        if (cached?.days?.length) {
+          setWeatherDays(cached.days);
+          setWeatherSource(`${cached.source} · 離線快取`);
+        } else {
+          setWeatherError(true);
+        }
+      }
     } finally {
       setWeatherLoading(false);
     }
@@ -214,7 +281,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Left Column */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Currency Converter */}
           <section id="tool-fx" className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
@@ -302,7 +369,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <h2 className="text-base font-bold text-zinc-950">7 天天氣預報</h2>
-                <p className="text-xs text-zinc-500 mt-0.5">資料來源 Open-Meteo（日本時間）</p>
+                <p className="text-xs text-zinc-500 mt-0.5">資料來源 {weatherSource}</p>
               </div>
               <select
                 aria-label="選擇天氣城市"
@@ -388,7 +455,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({
         </div>
 
         {/* Right Column */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Japanese Phrases */}
           <section id="tool-phrase" className="rounded-2xl border border-zinc-200 bg-white p-5 sm:p-6">
             <div className="mb-4">
